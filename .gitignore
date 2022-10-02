@@ -1,0 +1,5 @@
+# visual studio code configs
+.vscode
+
+# build directory
+build
