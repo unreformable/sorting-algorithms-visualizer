@@ -20,14 +20,14 @@ void Application::run()
     // Set up random number distribution
     std::random_device rd;
     std::mt19937 engine(rd());
-    std::uniform_int_distribution<int> distrib(0, 100);
+    std::uniform_int_distribution<int> distrib(0, 600);
 
     // Values to be sorted
     std::vector<int> data;
-    data.reserve(100);
+    data.reserve(600);
 
     // Fill data with random numbers
-    for(int i = 0; i < 100; ++i)
+    for(int i = 0; i < 600; ++i)
     {
         data.push_back(distrib(engine));
     }
@@ -59,7 +59,8 @@ void Application::run()
                         std::cout << std::endl;
                         std::cout << "Bubble Sort has been selected" << std::endl;
                         std::cout << "Displaying..." << std::endl;
-                        bubbleSort(data);
+                        std::vector<int> tmp(data);
+                        bubbleSort(tmp);
                         std::cout << "Done!" << std::endl;
                         std::cout << std::endl;
                         break;
@@ -69,7 +70,8 @@ void Application::run()
                         std::cout << std::endl;
                         std::cout << "Selection Sort has been selected" << std::endl;
                         std::cout << "Displaying..." << std::endl;
-                        selectionSort(data);
+                        std::vector<int> tmp(data);
+                        selectionSort(tmp);
                         std::cout << "Done!" << std::endl;
                         std::cout << std::endl;
                         break;
@@ -79,7 +81,8 @@ void Application::run()
                         std::cout << std::endl;
                         std::cout << "Insertion Sort has been selected" << std::endl;
                         std::cout << "Displaying..." << std::endl;
-                        insertionSort(data);
+                        std::vector<int> tmp(data);
+                        insertionSort(tmp);
                         std::cout << "Done!" << std::endl;
                         std::cout << std::endl;
                         break;
@@ -97,6 +100,13 @@ void Application::run()
                     }
                     case SDL_SCANCODE_4:
                     {
+                        std::cout << std::endl;
+                        std::cout << "Quickort has been selected" << std::endl;
+                        std::cout << "Displaying..." << std::endl;
+                        std::vector<int> tmp(data);
+                        quicksort(tmp, 0, tmp.size() - 1);
+                        std::cout << "Done!" << std::endl;
+                        std::cout << std::endl;
                         break;
                     }
                     case SDL_SCANCODE_5:
@@ -142,7 +152,7 @@ void Application::showMenu() const
     std::cout << std::endl;
 }
 
-void Application::bubbleSort(std::vector<int> data) const
+void Application::bubbleSort(std::vector<int>& data) const
 {
     int comparasions = 0;
     int swaps = 0;
@@ -169,7 +179,7 @@ void Application::bubbleSort(std::vector<int> data) const
     std::cout << "Total swaps: " << swaps << std::endl;
 }
 
-void Application::selectionSort(std::vector<int> data) const
+void Application::selectionSort(std::vector<int>& data) const
 {
     int comparasions = 0;
     int swaps = 0;
@@ -197,7 +207,7 @@ void Application::selectionSort(std::vector<int> data) const
     std::cout << "Total swaps: " << swaps << std::endl;
 }
 
-void Application::insertionSort(std::vector<int> data) const
+void Application::insertionSort(std::vector<int>& data) const
 {
     int comparasions = 0;
     for(int i = 1; i < data.size(); ++i)
@@ -223,7 +233,7 @@ void Application::insertionSort(std::vector<int> data) const
 
 void Application::mergeSort(std::vector<int>& data, int left, int right) const
 {
-    if(left == right)
+    if(left >= right)
         return;
 
     int mid = (left + right)/2;
@@ -293,10 +303,60 @@ void Application::merge(std::vector<int>& data, int left, int mid, int right) co
     }
 }
 
+void Application::quicksort(std::vector<int>& data, int left, int right) const
+{
+    if(left >= right)
+        return;
+
+    int pivot = partition(data, left, right);
+    quicksort(data, left, pivot - 1);   // before pivot
+    quicksort(data, pivot + 1, right);  // after pivot
+}
+
+int Application::partition(std::vector<int>& data, int left, int right) const
+{
+    // pivot value is rightmost element of data value
+    int pivot_val = data[right];
+
+    // pointer is set to left from the leftmost element
+    int i = left - 1;
+
+    SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255);
+    SDL_RenderClear(m_renderer);
+    draw(data, left, right);
+    SDL_RenderPresent(m_renderer);
+    SDL_Delay(DELAY);
+
+    for(int j = left; j < right; ++j)
+    {
+        if(data[j] <= pivot_val)
+        {
+            ++i;
+            std::swap(data[i], data[j]);
+
+            SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255);
+            SDL_RenderClear(m_renderer);
+            draw(data, j, right);
+            SDL_RenderPresent(m_renderer);
+            SDL_Delay(DELAY);
+        }
+    }
+    // swap pivot with the greater element at i
+    std::swap(data[i + 1], data[right]);
+
+    SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255);
+    SDL_RenderClear(m_renderer);
+    draw(data, i, right);
+    SDL_RenderPresent(m_renderer);
+    SDL_Delay(DELAY);
+
+    return i + 1;
+}
+
 void Application::draw(const std::vector<int>& data, int compared1, int compared2) const
 {
     const int elem_count = data.size();
-    const int max_value = 100;
+    const int max_value = 600;
 
     // Smallest part of drawn data
     const int rect_w = m_windowProps.width / elem_count;

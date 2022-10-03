@@ -26,11 +26,13 @@ public:
     Application(const WindowProps& props);
     void run();
     void showMenu() const;
-    void bubbleSort(std::vector<int> data) const;
-    void selectionSort(std::vector<int> data) const;
-    void insertionSort(std::vector<int> data) const;
+    void bubbleSort(std::vector<int>& data) const;
+    void selectionSort(std::vector<int>& data) const;
+    void insertionSort(std::vector<int>& data) const;
     void mergeSort(std::vector<int>& data, int left, int right) const;
     void merge(std::vector<int>& data, int left, int mid, int right) const;
+    void quicksort(std::vector<int>& data, int left, int right) const;
+    int partition(std::vector<int>& data, int left, int right) const;
     void draw(const std::vector<int>& data, int compared1, int compared2) const;
     /* void finalDraw(const std::vector<int>& data); */
 
