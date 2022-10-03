@@ -1,5 +1,11 @@
 #include "Application.hh"
 
+#include <algorithm>
+#include <iostream>
+#include <random>
+
+#define DELAY 1
+
 
 
 Application::Application(const WindowProps& props)
@@ -11,12 +17,27 @@ Application::Application(const WindowProps& props)
 
 void Application::run()
 {
+    // Set up random number distribution
+    std::random_device rd;
+    std::mt19937 engine(rd());
+    std::uniform_int_distribution<int> distrib(0, 100);
+
+    // Values to be sorted
+    std::vector<int> data;
+    data.reserve(100);
+
+    // Fill data with random numbers
+    for(int i = 0; i < 100; ++i)
+    {
+        data.push_back(distrib(engine));
+    }
+
     showMenu();
 
     while(m_running)
     {
         SDL_Event event;
-        while(SDL_PollEvent(&event))
+        while(SDL_WaitEvent(&event))
         {
             if(event.type == SDL_QUIT)
             {
@@ -29,7 +50,8 @@ void Application::run()
                 {
                     case SDL_SCANCODE_ESCAPE:
                     {
-                        m_running = false;
+                        SDL_Event quit_event{SDL_QUIT};
+                        SDL_PushEvent(&quit_event);
                         break;
                     }
                     case SDL_SCANCODE_0:
@@ -37,21 +59,40 @@ void Application::run()
                         std::cout << std::endl;
                         std::cout << "Bubble Sort has been selected" << std::endl;
                         std::cout << "Displaying..." << std::endl;
-                        bubble_sort();
+                        bubbleSort(data);
                         std::cout << "Done!" << std::endl;
                         std::cout << std::endl;
                         break;
                     }
                     case SDL_SCANCODE_1:
                     {
+                        std::cout << std::endl;
+                        std::cout << "Selection Sort has been selected" << std::endl;
+                        std::cout << "Displaying..." << std::endl;
+                        selectionSort(data);
+                        std::cout << "Done!" << std::endl;
+                        std::cout << std::endl;
                         break;
                     }
                     case SDL_SCANCODE_2:
                     {
+                        std::cout << std::endl;
+                        std::cout << "Insertion Sort has been selected" << std::endl;
+                        std::cout << "Displaying..." << std::endl;
+                        insertionSort(data);
+                        std::cout << "Done!" << std::endl;
+                        std::cout << std::endl;
                         break;
                     }
                     case SDL_SCANCODE_3:
                     {
+                        std::cout << std::endl;
+                        std::cout << "Merge Sort has been selected" << std::endl;
+                        std::cout << "Displaying..." << std::endl;
+                        std::vector<int> tmp(data);
+                        mergeSort(tmp, 0, tmp.size() - 1);
+                        std::cout << "Done!" << std::endl;
+                        std::cout << std::endl;
                         break;
                     }
                     case SDL_SCANCODE_4:
@@ -101,38 +142,154 @@ void Application::showMenu() const
     std::cout << std::endl;
 }
 
-void Application::bubble_sort() const
+void Application::bubbleSort(std::vector<int> data) const
 {
-    // Values to be sorted
-    std::vector<int> data;
-    data.reserve(100);
-
-    // Set up random number distribution
-    std::random_device rd;
-    std::mt19937 engine(rd());
-    std::uniform_int_distribution<int> distrib(0, 100);
-
-    // Fill data with random numbers
-    for(int i = 0; i < 100; ++i)
-    {
-        data.push_back(distrib(engine));
-    }
-
+    int comparasions = 0;
+    int swaps = 0;
     // Launch sorting algorithm
     for(int i = 0; i < data.size(); ++i)
     {
         for(int j = 0; j < data.size() - i - 1; ++j)
         {
-            if(data[j] > data[j + 1])
-                std::swap(data[j], data[j + 1]);
-
             SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255);
             SDL_RenderClear(m_renderer);
             draw(data, j, j + 1);
             SDL_RenderPresent(m_renderer);
+            SDL_Delay(DELAY);
 
-            SDL_Delay(10);
+            if(data[j] > data[j + 1])
+            {
+                std::swap(data[j], data[j + 1]);
+                ++swaps;
+            }
+            ++comparasions;
         }
+    }
+    std::cout << "Total comparasions: " << comparasions << std::endl;
+    std::cout << "Total swaps: " << swaps << std::endl;
+}
+
+void Application::selectionSort(std::vector<int> data) const
+{
+    int comparasions = 0;
+    int swaps = 0;
+    for(int i = 0; i < data.size(); ++i)
+    {
+        int min_index = i;
+        for(int j = i + 1; j < data.size(); ++j)
+        {
+            SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255);
+            SDL_RenderClear(m_renderer);
+            draw(data, j, min_index);
+            SDL_RenderPresent(m_renderer);
+            SDL_Delay(DELAY);
+
+            if(data[j] < data[min_index])
+            {
+                min_index = j;
+            }
+            ++comparasions;
+        }
+        std::swap(data[min_index], data[i]);
+        ++swaps;
+    }
+    std::cout << "Total comparasions: " << comparasions << std::endl;
+    std::cout << "Total swaps: " << swaps << std::endl;
+}
+
+void Application::insertionSort(std::vector<int> data) const
+{
+    int comparasions = 0;
+    for(int i = 1; i < data.size(); ++i)
+    {
+        int key = data[i];
+        int j = i - 1;
+        while(j >= 0 && key < data[j])
+        {
+            SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255);
+            SDL_RenderClear(m_renderer);
+            draw(data, i, j);
+            SDL_RenderPresent(m_renderer);
+            SDL_Delay(DELAY);
+
+            data[j + 1] = data[j];
+            ++comparasions;
+            --j;
+        }
+        data[j + 1] = key;
+    }
+    std::cout << "Total comparasions: " << comparasions << std::endl;
+}
+
+void Application::mergeSort(std::vector<int>& data, int left, int right) const
+{
+    if(left == right)
+        return;
+
+    int mid = (left + right)/2;
+    mergeSort(data, left, mid);
+    mergeSort(data, mid + 1, right);
+    merge(data, left, mid, right);
+}
+
+void Application::merge(std::vector<int>& data, int left, int mid, int right) const
+{
+    std::vector<int> left_data{data.begin() + left, data.begin() + mid + 1};
+    std::vector<int> right_data{data.begin() + mid + 1, data.begin() + right + 1};
+
+
+    int i = 0;          // left_data iterator index
+    int j = 0;          // right_data iterator index
+    int k = left;       // data iterator index
+
+    while(i < left_data.size() && j < right_data.size())
+    {
+        SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255);
+        SDL_RenderClear(m_renderer);
+        draw(data, i, j);
+        SDL_RenderPresent(m_renderer);
+        SDL_Delay(DELAY);
+
+        if(left_data[i] < right_data[j])
+        {
+            data[k] = left_data[i];
+            ++i;
+        }
+        else
+        {
+            data[k] = right_data[j];
+            ++j;
+        }
+        ++k;
+    }
+
+    if(i < left_data.size())
+    {
+        do {
+            data[k] = left_data[i];
+            ++i;
+            ++k;
+
+            SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255);
+            SDL_RenderClear(m_renderer);
+            draw(data, i, j);
+            SDL_RenderPresent(m_renderer);
+            SDL_Delay(DELAY);
+        } while(i < left_data.size());
+    }
+    else if(j < right_data.size())
+    {
+        do {
+            data[k] = right_data[j];
+            ++j;
+            ++k;
+
+            SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255);
+            SDL_RenderClear(m_renderer);
+            draw(data, i, j);
+            SDL_RenderPresent(m_renderer);
+            SDL_Delay(DELAY);
+        } while(j < right_data.size());
     }
 }
 
