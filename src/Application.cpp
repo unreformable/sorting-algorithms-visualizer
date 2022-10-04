@@ -6,6 +6,7 @@
 #include <random>
 
 #define DELAY 1
+#define MAX_VAL 599
 
 
 
@@ -23,14 +24,14 @@ void Application::run()
     // Set up random number distribution
     std::random_device rd;
     std::mt19937 engine(rd());
-    std::uniform_int_distribution<int> distrib(0, 600);
+    std::uniform_int_distribution<int> distrib(0, MAX_VAL);
 
     // Values to be sorted
     std::vector<int> data;
-    data.reserve(600);
+    data.reserve(MAX_VAL);
 
     // Fill data with random numbers
-    for(int i = 0; i < 600; ++i)
+    for(int i = 0; i < MAX_VAL; ++i)
     {
         data.push_back(distrib(engine));
     }
@@ -114,6 +115,13 @@ void Application::run()
                     }
                     case SDL_SCANCODE_5:
                     {
+                        std::cout << std::endl;
+                        std::cout << "Counting Sort has been selected" << std::endl;
+                        std::cout << "Displaying..." << std::endl;
+                        std::vector<int> tmp(data);
+                        countingSort(tmp);
+                        std::cout << "Done!" << std::endl;
+                        std::cout << std::endl;
                         break;
                     }
                     case SDL_SCANCODE_6:
@@ -164,7 +172,7 @@ void Application::bubbleSort(std::vector<int>& data) const
     {
         for(int j = 0; j < data.size() - i - 1; ++j)
         {
-            SortAlgoVisualizer::draw(m_renderer, data, 600);
+            SortAlgoVisualizer::draw(m_renderer, data, MAX_VAL);
             SDL_Delay(DELAY);
 
             if(data[j] > data[j + 1])
@@ -188,7 +196,7 @@ void Application::selectionSort(std::vector<int>& data) const
         int min_index = i;
         for(int j = i + 1; j < data.size(); ++j)
         {
-            SortAlgoVisualizer::draw(m_renderer, data, 600);
+            SortAlgoVisualizer::draw(m_renderer, data, MAX_VAL);
             SDL_Delay(DELAY);
 
             if(data[j] < data[min_index])
@@ -213,7 +221,7 @@ void Application::insertionSort(std::vector<int>& data) const
         int j = i - 1;
         while(j >= 0 && key < data[j])
         {
-            SortAlgoVisualizer::draw(m_renderer, data, 600);
+            SortAlgoVisualizer::draw(m_renderer, data, MAX_VAL);
             SDL_Delay(DELAY);
 
             data[j + 1] = data[j];
@@ -248,7 +256,7 @@ void Application::merge(std::vector<int>& data, int left, int mid, int right) co
 
     while(i < left_data.size() && j < right_data.size())
     {
-        SortAlgoVisualizer::draw(m_renderer, data, 600);
+        SortAlgoVisualizer::draw(m_renderer, data, MAX_VAL);
         SDL_Delay(DELAY);
 
         if(left_data[i] < right_data[j])
@@ -271,7 +279,7 @@ void Application::merge(std::vector<int>& data, int left, int mid, int right) co
             ++i;
             ++k;
 
-            SortAlgoVisualizer::draw(m_renderer, data, 600);
+            SortAlgoVisualizer::draw(m_renderer, data, MAX_VAL);
             SDL_Delay(DELAY);
         } while(i < left_data.size());
     }
@@ -282,7 +290,7 @@ void Application::merge(std::vector<int>& data, int left, int mid, int right) co
             ++j;
             ++k;
 
-            SortAlgoVisualizer::draw(m_renderer, data, 600);
+            SortAlgoVisualizer::draw(m_renderer, data, MAX_VAL);
             SDL_Delay(DELAY);
         } while(j < right_data.size());
     }
@@ -306,7 +314,7 @@ int Application::partition(std::vector<int>& data, int left, int right) const
     // pointer is set to left from the leftmost element
     int i = left - 1;
 
-    SortAlgoVisualizer::draw(m_renderer, data, 600);
+    SortAlgoVisualizer::draw(m_renderer, data, MAX_VAL);
     SDL_Delay(DELAY);
 
     for(int j = left; j < right; ++j)
@@ -316,15 +324,54 @@ int Application::partition(std::vector<int>& data, int left, int right) const
             ++i;
             std::swap(data[i], data[j]);
 
-            SortAlgoVisualizer::draw(m_renderer, data, 600);
+            SortAlgoVisualizer::draw(m_renderer, data, MAX_VAL);
             SDL_Delay(DELAY);
         }
     }
     // swap pivot with the greater element at i
     std::swap(data[i + 1], data[right]);
 
-    SortAlgoVisualizer::draw(m_renderer, data, 600);
+    SortAlgoVisualizer::draw(m_renderer, data, MAX_VAL);
     SDL_Delay(DELAY);
 
     return i + 1;
+}
+
+void Application::countingSort(std::vector<int>& data) const
+{
+    // Find the greatest value in data
+    const int max_value = MAX_VAL;
+    
+    // Make array for counting values in range (0 - max_value)
+    std::vector<int> count(max_value + 1, 0);
+
+    // Count occurrences of values
+    for(const int& val : data)
+        ++count[val];
+
+    // Make cumulative sum of the elements by adding previous values
+    for(int i = 1; i <= max_value; ++i)
+        count[i] += count[i - 1];
+    
+    // Make output array for storing sorted values
+    std::vector<int> output(max_value + 1, 0);
+
+    // Main part of counting sort algorithm
+    for(const int& val : data)
+    {
+        // Draw state before step of algorithm
+        SortAlgoVisualizer::draw(m_renderer, output, MAX_VAL);
+        SDL_Delay(DELAY);
+
+        // Assign value at correct position in output array
+        output[count[val] - 1] = val;
+        // Decrease count of assigned value
+        --count[val];
+    }
+
+    // Final draw
+    SortAlgoVisualizer::draw(m_renderer, output, MAX_VAL);
+
+    // Assign sorted values to data
+    data = output;
 }

@@ -33,6 +33,7 @@ public:
     void merge(std::vector<int>& data, int left, int mid, int right) const;
     void quicksort(std::vector<int>& data, int left, int right) const;
     int partition(std::vector<int>& data, int left, int right) const;
+    void countingSort(std::vector<int>& data) const;
 
 
 private:
