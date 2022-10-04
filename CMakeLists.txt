@@ -8,6 +8,7 @@ project(${APP})
 set(SOURCES
     src/main.cpp
     src/Application.cpp
+    src/SortAlgoVisualizer.cpp
 )
 
 # find sdl2 library

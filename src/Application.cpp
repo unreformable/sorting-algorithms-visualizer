@@ -1,4 +1,5 @@
 #include "Application.hh"
+#include "SortAlgoVizualizer.hh"
 
 #include <algorithm>
 #include <iostream>
@@ -13,6 +14,8 @@ Application::Application(const WindowProps& props)
 {
     SDL_CreateWindowAndRenderer(props.width, props.height, 0, &m_window, &m_renderer);
     SDL_SetWindowTitle(m_window, props.title.c_str());
+
+    SortAlgoVisualizer::setView(SDL_Rect{0, 0, m_windowProps.width, m_windowProps.height});
 }
 
 void Application::run()
@@ -161,10 +164,7 @@ void Application::bubbleSort(std::vector<int>& data) const
     {
         for(int j = 0; j < data.size() - i - 1; ++j)
         {
-            SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255);
-            SDL_RenderClear(m_renderer);
-            draw(data, j, j + 1);
-            SDL_RenderPresent(m_renderer);
+            SortAlgoVisualizer::draw(m_renderer, data, 600);
             SDL_Delay(DELAY);
 
             if(data[j] > data[j + 1])
@@ -188,10 +188,7 @@ void Application::selectionSort(std::vector<int>& data) const
         int min_index = i;
         for(int j = i + 1; j < data.size(); ++j)
         {
-            SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255);
-            SDL_RenderClear(m_renderer);
-            draw(data, j, min_index);
-            SDL_RenderPresent(m_renderer);
+            SortAlgoVisualizer::draw(m_renderer, data, 600);
             SDL_Delay(DELAY);
 
             if(data[j] < data[min_index])
@@ -216,10 +213,7 @@ void Application::insertionSort(std::vector<int>& data) const
         int j = i - 1;
         while(j >= 0 && key < data[j])
         {
-            SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255);
-            SDL_RenderClear(m_renderer);
-            draw(data, i, j);
-            SDL_RenderPresent(m_renderer);
+            SortAlgoVisualizer::draw(m_renderer, data, 600);
             SDL_Delay(DELAY);
 
             data[j + 1] = data[j];
@@ -254,10 +248,7 @@ void Application::merge(std::vector<int>& data, int left, int mid, int right) co
 
     while(i < left_data.size() && j < right_data.size())
     {
-        SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255);
-        SDL_RenderClear(m_renderer);
-        draw(data, i, j);
-        SDL_RenderPresent(m_renderer);
+        SortAlgoVisualizer::draw(m_renderer, data, 600);
         SDL_Delay(DELAY);
 
         if(left_data[i] < right_data[j])
@@ -280,10 +271,7 @@ void Application::merge(std::vector<int>& data, int left, int mid, int right) co
             ++i;
             ++k;
 
-            SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255);
-            SDL_RenderClear(m_renderer);
-            draw(data, i, j);
-            SDL_RenderPresent(m_renderer);
+            SortAlgoVisualizer::draw(m_renderer, data, 600);
             SDL_Delay(DELAY);
         } while(i < left_data.size());
     }
@@ -294,10 +282,7 @@ void Application::merge(std::vector<int>& data, int left, int mid, int right) co
             ++j;
             ++k;
 
-            SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255);
-            SDL_RenderClear(m_renderer);
-            draw(data, i, j);
-            SDL_RenderPresent(m_renderer);
+            SortAlgoVisualizer::draw(m_renderer, data, 600);
             SDL_Delay(DELAY);
         } while(j < right_data.size());
     }
@@ -321,10 +306,7 @@ int Application::partition(std::vector<int>& data, int left, int right) const
     // pointer is set to left from the leftmost element
     int i = left - 1;
 
-    SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255);
-    SDL_RenderClear(m_renderer);
-    draw(data, left, right);
-    SDL_RenderPresent(m_renderer);
+    SortAlgoVisualizer::draw(m_renderer, data, 600);
     SDL_Delay(DELAY);
 
     for(int j = left; j < right; ++j)
@@ -334,48 +316,15 @@ int Application::partition(std::vector<int>& data, int left, int right) const
             ++i;
             std::swap(data[i], data[j]);
 
-            SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255);
-            SDL_RenderClear(m_renderer);
-            draw(data, j, right);
-            SDL_RenderPresent(m_renderer);
+            SortAlgoVisualizer::draw(m_renderer, data, 600);
             SDL_Delay(DELAY);
         }
     }
     // swap pivot with the greater element at i
     std::swap(data[i + 1], data[right]);
 
-    SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255);
-    SDL_RenderClear(m_renderer);
-    draw(data, i, right);
-    SDL_RenderPresent(m_renderer);
+    SortAlgoVisualizer::draw(m_renderer, data, 600);
     SDL_Delay(DELAY);
 
     return i + 1;
-}
-
-void Application::draw(const std::vector<int>& data, int compared1, int compared2) const
-{
-    const int elem_count = data.size();
-    const int max_value = 600;
-
-    // Smallest part of drawn data
-    const int rect_w = m_windowProps.width / elem_count;
-    const int rect_h = - m_windowProps.height / max_value;
-
-    // Draw all data values
-    SDL_SetRenderDrawColor(m_renderer, 255, 255, 255, 255);
-    for(int i = 0; i < data.size(); ++i)
-    {
-        SDL_Rect rect{rect_w * i, m_windowProps.height, rect_w, rect_h * data[i]};
-        SDL_RenderFillRect(m_renderer, &rect);
-    }
-    {   // Highlight in red the first compared value
-        SDL_SetRenderDrawColor(m_renderer, 255, 0, 0, 255);
-        SDL_Rect rect{rect_w * compared1, m_windowProps.height, rect_w, rect_h * data[compared1]};
-        SDL_RenderFillRect(m_renderer, &rect);
-    }
-    {   // Highlight in red the second compared value
-        SDL_Rect rect{rect_w * compared2, m_windowProps.height, rect_w, rect_h * data[compared2]};
-        SDL_RenderFillRect(m_renderer, &rect);
-    }
 }
