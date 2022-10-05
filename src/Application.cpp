@@ -6,16 +6,18 @@
 #include <random>
 
 #define DELAY 1
-#define MAX_VAL 599
+#define MAX_VAL m_windowProps.height - 1
 
 
 
 Application::Application(const WindowProps& props)
 :   m_windowProps(props)
 {
+    // Set up window and renderer
     SDL_CreateWindowAndRenderer(props.width, props.height, 0, &m_window, &m_renderer);
     SDL_SetWindowTitle(m_window, props.title.c_str());
 
+    // Set the part of the screen where algorithm will be displayed
     SortAlgoVisualizer::setView(SDL_Rect{0, 0, m_windowProps.width, m_windowProps.height});
 }
 
@@ -26,7 +28,7 @@ void Application::run()
     std::mt19937 engine(rd());
     std::uniform_int_distribution<int> distrib(0, MAX_VAL);
 
-    // Values to be sorted
+    // Storage for values
     std::vector<int> data;
     data.reserve(MAX_VAL);
 
@@ -165,88 +167,91 @@ void Application::showMenu() const
 
 void Application::bubbleSort(std::vector<int>& data) const
 {
-    int comparasions = 0;
-    int swaps = 0;
-    // Launch sorting algorithm
+    // For each data element
     for(int i = 0; i < data.size(); ++i)
     {
+        // From first element to last unsorted element
         for(int j = 0; j < data.size() - i - 1; ++j)
         {
             SortAlgoVisualizer::draw(m_renderer, data, MAX_VAL);
             SDL_Delay(DELAY);
 
+            // Swap if left element is greater than the right one
             if(data[j] > data[j + 1])
-            {
                 std::swap(data[j], data[j + 1]);
-                ++swaps;
-            }
-            ++comparasions;
         }
     }
-    std::cout << "Total comparasions: " << comparasions << std::endl;
-    std::cout << "Total swaps: " << swaps << std::endl;
+    SortAlgoVisualizer::draw(m_renderer, data, MAX_VAL);
 }
 
 void Application::selectionSort(std::vector<int>& data) const
 {
-    int comparasions = 0;
-    int swaps = 0;
-    for(int i = 0; i < data.size(); ++i)
+    // For each data element
+    for(int step = 0; step < data.size(); ++step)
     {
-        int min_index = i;
-        for(int j = i + 1; j < data.size(); ++j)
+        // Lowest element index for actual loop
+        int min_index = step;
+        // From index of first unsorted element to last element
+        for(int i = step + 1; i < data.size(); ++i)
         {
             SortAlgoVisualizer::draw(m_renderer, data, MAX_VAL);
             SDL_Delay(DELAY);
 
-            if(data[j] < data[min_index])
-            {
-                min_index = j;
-            }
-            ++comparasions;
+            // Is new lowest element found?
+            if(data[i] < data[min_index])
+                min_index = i;
         }
-        std::swap(data[min_index], data[i]);
-        ++swaps;
+        // Set lowest value element at first unsorted position
+        std::swap(data[min_index], data[step]);
     }
-    std::cout << "Total comparasions: " << comparasions << std::endl;
-    std::cout << "Total swaps: " << swaps << std::endl;
+    SortAlgoVisualizer::draw(m_renderer, data, MAX_VAL);
 }
 
 void Application::insertionSort(std::vector<int>& data) const
 {
-    int comparasions = 0;
-    for(int i = 1; i < data.size(); ++i)
+    // For (almost) each data element
+    for(int step = 1; step < data.size(); ++step)
     {
-        int key = data[i];
-        int j = i - 1;
-        while(j >= 0 && key < data[j])
+        // Copy the element value to the right of the first unsorted element
+        const int key = data[step];
+        // Index of first unsorted element
+        int i = step - 1;
+        // Untill index isn't negative or elements to the left of key are already sorted
+        // keep moving elements to the right
+        while(i >= 0 && key < data[i])
         {
             SortAlgoVisualizer::draw(m_renderer, data, MAX_VAL);
             SDL_Delay(DELAY);
 
-            data[j + 1] = data[j];
-            ++comparasions;
-            --j;
+            data[i + 1] = data[i];
+            --i;
         }
-        data[j + 1] = key;
+        // Fix invalid value in (i + 1) position with key value
+        data[i + 1] = key;
     }
-    std::cout << "Total comparasions: " << comparasions << std::endl;
+    SortAlgoVisualizer::draw(m_renderer, data, MAX_VAL);
 }
 
 void Application::mergeSort(std::vector<int>& data, int left, int right) const
 {
-    if(left >= right)
+    // Stop condition - maximum division has already occurred
+    if(left == right)
         return;
 
+    // Point where array is divided into two subarrays
     int mid = (left + right)/2;
+    // Recursive calls for left and right subarray
     mergeSort(data, left, mid);
     mergeSort(data, mid + 1, right);
+    // Division is a thing of the past, now it's time to Conquer!
     merge(data, left, mid, right);
 }
 
 void Application::merge(std::vector<int>& data, int left, int mid, int right) const
 {
+    // Data beetwen left and mid index
     std::vector<int> left_data{data.begin() + left, data.begin() + mid + 1};
+    // Data beetwen mid and right index
     std::vector<int> right_data{data.begin() + mid + 1, data.begin() + right + 1};
 
 
@@ -254,12 +259,14 @@ void Application::merge(std::vector<int>& data, int left, int mid, int right) co
     int j = 0;          // right_data iterator index
     int k = left;       // data iterator index
 
+    // While left_data or right_data iterator index doesn't reach it's data end
     while(i < left_data.size() && j < right_data.size())
     {
         SortAlgoVisualizer::draw(m_renderer, data, MAX_VAL);
         SDL_Delay(DELAY);
 
-        if(left_data[i] < right_data[j])
+        // Insert the smaller of the values at k position 
+        if(left_data[i] <= right_data[j])
         {
             data[k] = left_data[i];
             ++i;
@@ -272,69 +279,74 @@ void Application::merge(std::vector<int>& data, int left, int mid, int right) co
         ++k;
     }
 
-    if(i < left_data.size())
+    // Put remaining elements to data
+    while(i < left_data.size())
     {
-        do {
-            data[k] = left_data[i];
-            ++i;
-            ++k;
+        SortAlgoVisualizer::draw(m_renderer, data, MAX_VAL);
+        SDL_Delay(DELAY);
 
-            SortAlgoVisualizer::draw(m_renderer, data, MAX_VAL);
-            SDL_Delay(DELAY);
-        } while(i < left_data.size());
+        data[k] = left_data[i];
+        ++i;
+        ++k;
     }
-    else if(j < right_data.size())
+    while(j < right_data.size())
     {
-        do {
-            data[k] = right_data[j];
-            ++j;
-            ++k;
+        SortAlgoVisualizer::draw(m_renderer, data, MAX_VAL);
+        SDL_Delay(DELAY);
 
-            SortAlgoVisualizer::draw(m_renderer, data, MAX_VAL);
-            SDL_Delay(DELAY);
-        } while(j < right_data.size());
+        data[k] = right_data[j];
+        ++j;
+        ++k;
     }
+    SortAlgoVisualizer::draw(m_renderer, data, MAX_VAL);
 }
 
 void Application::quicksort(std::vector<int>& data, int left, int right) const
 {
+    // Stop condition - this subarray can't be divided anymore
     if(left >= right)
         return;
 
+    // Point where array is divided into two subarrays
     int pivot = partition(data, left, right);
-    quicksort(data, left, pivot - 1);   // before pivot
-    quicksort(data, pivot + 1, right);  // after pivot
+    // Recursive calls for subarrays
+    quicksort(data, left, pivot - 1); 
+    quicksort(data, pivot + 1, right);
 }
 
 int Application::partition(std::vector<int>& data, int left, int right) const
 {
-    // pivot value is rightmost element of data value
+    // Pivot value is value of rightmost element
     int pivot_val = data[right];
 
-    // pointer is set to left from the leftmost element
-    int i = left - 1;
+    // Pointer is set to left from the leftmost element
+    int ptr = left - 1;
 
-    SortAlgoVisualizer::draw(m_renderer, data, MAX_VAL);
-    SDL_Delay(DELAY);
-
-    for(int j = left; j < right; ++j)
+    // Until all indexes before the pivot are visited
+    for(int i = left; i < right; ++i)
     {
-        if(data[j] <= pivot_val)
+        // Value under index is smaller than pivot value
+        if(data[i] <= pivot_val)
         {
-            ++i;
-            std::swap(data[i], data[j]);
-
             SortAlgoVisualizer::draw(m_renderer, data, MAX_VAL);
             SDL_Delay(DELAY);
+
+            // Move pointer to the right and swap pointer and index value
+            ++ptr;
+            // Swap pointer value with index value
+            std::swap(data[ptr], data[i]);
         }
     }
-    // swap pivot with the greater element at i
-    std::swap(data[i + 1], data[right]);
-
     SortAlgoVisualizer::draw(m_renderer, data, MAX_VAL);
     SDL_Delay(DELAY);
 
-    return i + 1;
+    // Swap the pivot value with the value on the right from ptr
+    std::swap(data[ptr + 1], data[right]);
+
+    SortAlgoVisualizer::draw(m_renderer, data, MAX_VAL);
+
+    // Return the position where partition is done
+    return ptr + 1;
 }
 
 void Application::countingSort(std::vector<int>& data) const
